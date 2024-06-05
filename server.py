@@ -506,7 +506,7 @@ class PromptServer():
 
         @routes.post("/kill")
         async def post_kill(request):
-            os.system("taskkill /F /PID " + str(os.getppid()))
+            os.system("taskkill /F /PID " + str(os.getpid()))
             return web.Response(status=200)
 
         @routes.post("/free")
