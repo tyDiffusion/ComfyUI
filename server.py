@@ -504,6 +504,11 @@ class PromptServer():
             nodes.interrupt_processing()
             return web.Response(status=200)
 
+        @routes.post("/kill")
+        async def post_kill(request):
+            os.system("taskkill /F /PID " + str(os.getppid()))
+            return web.Response(status=200)
+
         @routes.post("/free")
         async def post_free(request):
             json_data = await request.json()
