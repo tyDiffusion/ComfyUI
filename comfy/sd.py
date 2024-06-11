@@ -295,11 +295,18 @@ class VAE:
             free_memory = model_management.get_free_memory(self.device)
             batch_number = int(free_memory / memory_used)
             batch_number = max(1, batch_number)
-
             pixel_samples = torch.empty((samples_in.shape[0], 3, round(samples_in.shape[2] * self.upscale_ratio), round(samples_in.shape[3] * self.upscale_ratio)), device=self.output_device)
-            for x in range(0, samples_in.shape[0], batch_number):
+            
+            steps = int(samples_in.shape[0] / batch_number)
+            step = 1
+            pbar = comfy.utils.ProgressBar(steps)
+            
+            for x in range(0, samples_in.shape[0], batch_number):                
                 samples = samples_in[x:x+batch_number].to(self.vae_dtype).to(self.device)
-                pixel_samples[x:x+batch_number] = self.process_output(self.first_stage_model.decode(samples).to(self.output_device).float())
+                pixel_samples[x:x+batch_number] = self.process_output(self.first_stage_model.decode(samples).to(self.output_device).float())                
+                pbar.update_absolute(step, steps, None)
+                step += 1
+                
         except model_management.OOM_EXCEPTION as e:
             logging.warning("Warning: Ran out of memory when regular VAE decoding, retrying with tiled VAE decoding.")
             pixel_samples = self.decode_tiled_(samples_in)
@@ -322,9 +329,16 @@ class VAE:
             batch_number = int(free_memory / memory_used)
             batch_number = max(1, batch_number)
             samples = torch.empty((pixel_samples.shape[0], self.latent_channels, round(pixel_samples.shape[2] // self.downscale_ratio), round(pixel_samples.shape[3] // self.downscale_ratio)), device=self.output_device)
+            
+            steps = int(pixel_samples.shape[0] / batch_number)
+            step = 1
+            pbar = comfy.utils.ProgressBar(steps)
+            
             for x in range(0, pixel_samples.shape[0], batch_number):
                 pixels_in = self.process_input(pixel_samples[x:x+batch_number]).to(self.vae_dtype).to(self.device)
-                samples[x:x+batch_number] = self.first_stage_model.encode(pixels_in).to(self.output_device).float()
+                samples[x:x+batch_number] = self.first_stage_model.encode(pixels_in).to(self.output_device).float()                
+                pbar.update_absolute(step, steps, None)
+                step += 1
 
         except model_management.OOM_EXCEPTION as e:
             logging.warning("Warning: Ran out of memory when regular VAE encoding, retrying with tiled VAE encoding.")
