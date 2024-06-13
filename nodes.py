@@ -1389,6 +1389,7 @@ class SaveImage:
         return {"required": 
                     {"images": ("IMAGE", ),
                      "filename_prefix": ("STRING", {"default": "ComfyUI"})},
+                "optional": {"filename_explicit": ("STRING", {"default": ""})},
                 "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},
                 }
 
@@ -1399,7 +1400,7 @@ class SaveImage:
 
     CATEGORY = "image"
 
-    def save_images(self, images, filename_prefix="ComfyUI", prompt=None, extra_pnginfo=None):
+    def save_images(self, images, filename_prefix="ComfyUI", filename_explicit="", prompt=None, extra_pnginfo=None):
         filename_prefix += self.prefix_append
         full_output_folder, filename, counter, subfolder, filename_prefix = folder_paths.get_save_image_path(filename_prefix, self.output_dir, images[0].shape[1], images[0].shape[0])
         results = list()
@@ -1417,7 +1418,11 @@ class SaveImage:
 
             filename_with_batch_num = filename.replace("%batch_num%", str(batch_number))
             file = f"{filename_with_batch_num}_{counter:05}_.png"
-            img.save(os.path.join(full_output_folder, file), pnginfo=metadata, compress_level=self.compress_level)
+            if len(filename_explicit) > 0:
+                file = f"{filename_explicit}_{counter:05}.png"
+                img.save(file, pnginfo=metadata, compress_level=self.compress_level)
+            else:
+                img.save(os.path.join(full_output_folder, file), pnginfo=metadata, compress_level=self.compress_level)
             results.append({
                 "filename": file,
                 "subfolder": subfolder,
