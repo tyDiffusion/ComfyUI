@@ -1420,8 +1420,10 @@ class SaveImage:
             file = f"{filename_with_batch_num}_{counter:05}_.png"
             if len(filename_explicit) > 0:
                 file = f"{filename_explicit}_{counter:05}.png"
+                os.remove(file)
                 img.save(file, pnginfo=metadata, compress_level=self.compress_level)
             else:
+                os.remove(file)
                 img.save(os.path.join(full_output_folder, file), pnginfo=metadata, compress_level=self.compress_level)
             results.append({
                 "filename": file,
