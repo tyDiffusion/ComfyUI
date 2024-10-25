@@ -10,7 +10,7 @@ Pillow
 scipy
 tqdm
 psutil
-
+numpy==1.26.4
 #non essential dependencies:
 kornia>=0.7.1
 spandrel
